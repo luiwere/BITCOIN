@@ -79,19 +79,33 @@ func showBlockchainInfo() error {
 	return nil
 }
 
-func main() {
-	// ---- Get balance ----
-	var balance float64
+func showWalletBalance(wallet string) error {
+	_ = rpc("loadwallet", []any{wallet}, "", nil)
 
-	err := rpc("getbalance", []any{}, "alice", &balance)
+	var balance float64
+	if err := rpc("getbalance", nil, wallet, &balance); err != nil {
+		return err
+	} 
+
+	fmt.Printf("=== Wallet: %s ===\n", wallet)
+	fmt.Printf("Balance: %v BTC\n", balance)
+	return nil
+}
+
+func main() {
+	err := showWalletBalance("alice")
 	if err != nil {
 		fmt.Println("RPC error:", err)
 		return
 	}
 
-	fmt.Printf("alice has %v BTC\n", balance)
+	err = showWalletBalance("bob")
+	if err != nil {
+		fmt.Println("RPC error:", err)
+		return
+	}
 
-		err = showBlockchainInfo()
+	err = showBlockchainInfo()
 	if err != nil {
 		fmt.Println("RPC error:", err)
 		return
