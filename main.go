@@ -180,6 +180,37 @@ func decodeTransaction(txid string) error {
 	return nil
 }
 
+func showBlock(blockhash string) error {
+	if blockhash == "" {
+		rpc("getbestblockhash", nil, "", &blockhash)
+	}
+
+	var block struct {
+		Hash   	string	`json:"hash"`
+		Height 	int		`json:"height"`
+		Time   	int64	`json:"time"`
+		NTx    	int		`json:"nTx"`
+		Tx 		[]string `json:"txid"`
+		}
+
+	if err := rpc(
+		"getblock",
+		[]any{blockhash, 1},
+		"",
+		&block,
+	); err != nil {
+		return err
+	}
+
+	fmt.Println("=== BLOCK INFO ===")
+	fmt.Println("Height:", block.Height)
+	fmt.Println("Hash:", block.Hash)
+	fmt.Println("Time:", block.Time)
+	fmt.Println("Tx count:", len(block.Tx))
+
+	return nil
+}
+
 func main() {
 	err := showWalletBalance("alice")
 	if err != nil {
@@ -206,5 +237,11 @@ func main() {
 		fmt.Println("RPC error:", err)
 		return
 	}
+
+	err = showBlock("")
+	if err != nil {
+		fmt.Println("RPC error:", err)
+	}
+
 }
 
