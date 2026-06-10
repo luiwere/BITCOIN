@@ -60,30 +60,41 @@ func rpc(method string, params []any, wallet string, out any) error {
 	return json.Unmarshal(parsed.Result, out)
 }
 
-func main() {
-	// ---- Get balance ----
-	var balance float64
-
-	err := rpc("getbalance", []any{}, "bob", &balance)
-	if err != nil {
-		fmt.Println("RPC error:", err)
-		return
-	}
-
-	fmt.Printf("Bob has %v BTC\n", balance)
-
-	// ---- Get blockchain info ----
+func showBlockchainInfo() error {
 	var info struct {
-		Chain  string `json:"chain"`
-		Blocks int    `json:"blocks"`
+		Chain      string  `json:"chain"`
+		Blocks     int     `json:"blocks"`
+		Difficulty float64 `json:"difficulty"`
 	}
 
-	err = rpc("getblockchaininfo", nil, "", &info)
+	err := rpc("getblockchaininfo", nil, "", &info)
 	if err != nil {
-		fmt.Println("RPC error:", err)
-		return
+		return err
 	}
 
 	fmt.Println("Chain:", info.Chain)
 	fmt.Println("Blocks:", info.Blocks)
+	fmt.Println("Difficulty:", info.Difficulty)
+
+	return nil
 }
+
+func main() {
+	// ---- Get balance ----
+	var balance float64
+
+	err := rpc("getbalance", []any{}, "alice", &balance)
+	if err != nil {
+		fmt.Println("RPC error:", err)
+		return
+	}
+
+	fmt.Printf("alice has %v BTC\n", balance)
+
+		err = showBlockchainInfo()
+	if err != nil {
+		fmt.Println("RPC error:", err)
+		return
+	}
+}
+
