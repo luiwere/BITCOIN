@@ -92,6 +92,50 @@ func showWalletBalance(wallet string) error {
 	return nil
 }
 
+func listTransactions(wallet string) error {
+
+	_ = rpc ("loadwallet", []any{wallet}, "", nil)
+
+	var txs []struct {
+		Category      string  `json:"category"`
+		Amount        float64 `json:"amount"`
+		TxID          string  `json:"txid"`
+		Confirmations int     `json:"confirmations"`
+	}
+
+	count := 10
+
+	if err := rpc(
+		"listtransactions",
+		[]any{"*", count},
+		wallet,
+		&txs, 
+		); err != nil {
+		return err
+	}
+
+	fmt.Printf("=== Transactions for %s ===\n", wallet)
+
+	for _, tx := range txs {
+		dir := "OUT"
+
+		switch tx.Category {
+		case "receive", "generate", "immature":
+			dir = "IN "
+		}
+
+		fmt.Printf(
+			"%s %+.8f BTC | %d confs\n",
+			dir,
+			tx.Amount,
+			tx.Confirmations,
+		)
+		fmt.Printf("\tTXID: %s\n", tx.TxID)
+	}
+
+	return nil
+}
+
 func main() {
 	err := showWalletBalance("alice")
 	if err != nil {
@@ -99,7 +143,7 @@ func main() {
 		return
 	}
 
-	err = showWalletBalance("bob")
+	err = listTransactions("alice")
 	if err != nil {
 		fmt.Println("RPC error:", err)
 		return
