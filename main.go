@@ -136,6 +136,50 @@ func listTransactions(wallet string) error {
 	return nil
 }
 
+func decodeTransaction(txid string) error {
+	var tx struct {
+		Vin []struct {
+			Coinbase	string	`json:"coinbase"`
+			TxID		string	`json:"txid"`
+			Vout		int		`json:"vout"`	
+		} `json:"vin"`
+
+		Vout []struct {
+			Value			float64 `json:"value"`
+
+			ScriptPubKey	struct {
+				Address		string `json:"address"`
+			} `json:"scriptPubKey"`
+		} `json:"vout"`
+	}
+
+	if err := rpc("getrawtransaction", []any{txid, true}, "", &tx); err != nil {
+		return err
+	}
+
+	fmt.Println("=== TRANSACTION ===")
+
+	for _, vin := range tx.Vin {
+		if vin.Coinbase != "" {
+			fmt.Println("\tCOINBASE (mining reward)")
+		} else {
+			fmt.Printf("\tFrom: Tx: %s...\n", vin.TxID)
+		}
+	}
+
+	for _, vout := range tx.Vout {
+		address := "UNKNOWN"
+
+		if len(vout.ScriptPubKey.Address) > 0 {
+			address = vout.ScriptPubKey.Address
+		}
+
+		fmt.Printf("\t%.8f BTC -> %s\n", vout.Value, address)
+	}
+
+	return nil
+}
+
 func main() {
 	err := showWalletBalance("alice")
 	if err != nil {
@@ -150,6 +194,14 @@ func main() {
 	}
 
 	err = showBlockchainInfo()
+	if err != nil {
+		fmt.Println("RPC error:", err)
+		return
+	}
+
+	txid := "23c67dd878b5a37a022db235004b220fcf75b9ae089d01ea24221c725de95a54"
+
+	err = decodeTransaction(txid)
 	if err != nil {
 		fmt.Println("RPC error:", err)
 		return
